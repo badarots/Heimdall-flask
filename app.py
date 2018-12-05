@@ -4,9 +4,15 @@ from passlib.hash import pbkdf2_sha256
 import sqlite3
 from functools import wraps
 from flask_mqtt import Mqtt
+import sys
 
-# config sqlite
+# Outros scripts
+from token import generate_token, confirm_token
+
+
 app = Flask(__name__)
+
+# Configurando MQTT
 app.config['MQTT_BROKER_URL'] = 'localhost'
 app.config['MQTT_BROKER_PORT'] = 1883
 app.config['MQTT_USERNAME'] = 'server'
@@ -14,6 +20,7 @@ app.config['MQTT_PASSWORD'] = '1234'
 app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
 mqtt = Mqtt(app)
 
+# Configurando bando de dados
 DATABASE = 'fechadura.db'
 
 # Abre banco de dados
@@ -49,18 +56,20 @@ def index():
 def about():
     return render_template('about.html')
 
-# register class
+# Register class
 class RegisterForm(Form):
-    name = StringField("Nome", [validators.Length(min=1, max=50)])
     username = StringField("Usuário", [validators.Length(min=4, max=25)])
-    email = StringField("E-mail", [validators.Length(min=6, max=50)])
+    name = StringField("Nome", [validators.Length(min=6, max=50)])
+    email = StringField("E-mail", [validators.Length(min=8, max=50)])
     passwd = PasswordField("Senha", [
         validators.DataRequired(),
-        validators.EqualTo('confirm', message='Senhas são diferentes')
+        validators.EqualTo('confirm', message='Senhas são diferentes'),
+        validators.Length(min=4)
     ])
     confirm = PasswordField('Confirme a senha')
 
-# user register
+
+# User register
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm(request.form)
@@ -73,21 +82,51 @@ def register():
 
         # adcionando usuário ao banco de dados
         cur = get_db()
-        cur.execute("INSERT INTO users( name, email, username, passwd) VALUES(?, ?, ?, ?)", (name, email, username, passwd))
+        try:
+            cur.execute("INSERT INTO users( username, name, email, passwd ) VALUES(?, ?, ?, ?)", (username, name, email, passwd))
+            # commit
+            cur.commit()
+        except Exception as e:
+            flash('Erro: ' + str(e), 'danger')
+        else:
+            # mensagem
+            flash('Você está registrado', 'success')
+
+            return redirect(url_for('login'))
+
+        # fechando conexão
+        cur.close()
+
+
+
+
+    return render_template('register.html', form=form)
+
+
+# Confirmação por email
+@app.route('/confirm/<token>')
+@is_logged_in
+def confirm_email(token):
+    try:
+        email = confirm_email(token)
+    except:
+        flash('O link de confirmação é inválido ou expirou', 'danger')
+    user = query_db('SELECT * FROM users WHERE email=?', (email,))
+
+    if user.confirmed:
+        flash('Conta já confirmada', 'success')
+    else:
+        cur = get_db()
+        cur.execute('UPDATE users SET confirmed=1 WHERE email=?', (email,))
         # commit
         cur.commit()
         # fechando conexão
         cur.close()
 
-        # mensagem
-        flash('Você está registrado', 'success')
-
-        return redirect(url_for('login'))
-
-    return render_template('register.html', form=form)
+    return redirect(url_for('login'))
 
 
-# user login
+# User login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -135,13 +174,12 @@ def is_logged_in(f):
 
 # Logout
 @app.route('/logout')
-@is_logged_in
 def logout():
     session.clear()
     flash('Você está desconectado', 'success')
     return redirect(url_for('login'))
 
-# user dashboard
+# User dashboard
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
@@ -168,7 +206,7 @@ def open_door():
         return redirect(url_for('dashboard'))
 
 
-# Controlo do MQTT
+# Controle do MQTT
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
     mqtt.subscribe('server')
@@ -198,5 +236,14 @@ def close_connection(exception):
 
 
 if __name__ == "__main__":
-    app.secret_key = 'eitalasqueiravixenoistudo'
-    app.run(debug=True)
+    modo = sys.argv[1]
+    if modo == 'init':
+        db = sqlite3.connect(DATABASE)
+        with open('schema.sql', mode='r') as f:
+            db.cursor().executescript(f.read())
+        db.commit()
+        print('Banco de dados criado')
+
+    else:
+        app.secret_key = 'eitalasqueiravixenoistudo'
+        app.run(debug=True)
