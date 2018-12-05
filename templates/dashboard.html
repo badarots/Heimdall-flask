@@ -1,0 +1,8 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Dashboard</h1>
+  <p>Bem vindo <b>{{session.username}}</b></p>
+  <a class="btn btn-success" href="/open_door">Liberar Porta</a>
+  <hr>
+{% endblock %}
