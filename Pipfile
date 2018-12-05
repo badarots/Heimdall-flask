@@ -8,6 +8,7 @@ flask = "*"
 flask-wtf = "*"
 passlib = "*"
 flask-mqtt = "*"
+itsdangerous = "*"
 
 [dev-packages]
 pylint = "*"

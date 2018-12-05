@@ -7,7 +7,7 @@ from flask_mqtt import Mqtt
 import sys
 
 # Outros scripts
-from token import generate_token, confirm_token
+from email_token import generate_token, confirm_token
 
 
 app = Flask(__name__)
@@ -58,13 +58,12 @@ def about():
 
 # Register class
 class RegisterForm(Form):
-    username = StringField("Usuário", [validators.Length(min=4, max=25)])
-    name = StringField("Nome", [validators.Length(min=6, max=50)])
-    email = StringField("E-mail", [validators.Length(min=8, max=50)])
+    username = StringField("Usuário", [validators.Length(min=1, max=25)])
+    name = StringField("Nome", [validators.Length(min=1, max=50)])
+    email = StringField("E-mail", [validators.Length(min=1, max=50)])
     passwd = PasswordField("Senha", [
         validators.DataRequired(),
         validators.EqualTo('confirm', message='Senhas são diferentes'),
-        validators.Length(min=4)
     ])
     confirm = PasswordField('Confirme a senha')
 
@@ -90,40 +89,46 @@ def register():
             flash('Erro: ' + str(e), 'danger')
         else:
             # mensagem
-            flash('Você está registrado', 'success')
+            # flash('Você está registrado', 'success')
+            flash('O link de confirmção foi enviado para o seu e-mail', 'success')
+            token = generate_token(email)
+            confirm_url = url_for('confirm_email', token=token, _external=True)
+            html = render_template('activate.html', confirm_url=confirm_url)
+            subject = "HackerSpace.IFUSP: confirmação de e-mail"
 
-            return redirect(url_for('login'))
+            # return redirect(url_for('home'))
+            return html
 
         # fechando conexão
         cur.close()
-
-
-
+    elif request.method == 'POST':
+        flash('Campos incorretor', 'danger')
 
     return render_template('register.html', form=form)
 
 
 # Confirmação por email
 @app.route('/confirm/<token>')
-@is_logged_in
 def confirm_email(token):
-    try:
-        email = confirm_email(token)
-    except:
+    email = confirm_token(token)
+    if not email:
         flash('O link de confirmação é inválido ou expirou', 'danger')
-    user = query_db('SELECT * FROM users WHERE email=?', (email,))
+        return render_template('404.html')
 
-    if user.confirmed:
-        flash('Conta já confirmada', 'success')
     else:
-        cur = get_db()
-        cur.execute('UPDATE users SET confirmed=1 WHERE email=?', (email,))
-        # commit
-        cur.commit()
-        # fechando conexão
-        cur.close()
+        user = query_db('SELECT * FROM users WHERE email=?', (email,), one=True)
 
-    return redirect(url_for('login'))
+        if user['confirmed']:
+            flash('Conta já confirmada', 'success')
+        else:
+            cur = get_db()
+            cur.execute('UPDATE users SET confirmed=1 WHERE email=?', (email,))
+            # commit
+            cur.commit()
+            # fechando conexão
+            cur.close()
+            flash("Conta confirmada com sucesso", 'success')
+        return redirect(url_for('login'))
 
 
 # User login
@@ -234,10 +239,14 @@ def close_connection(exception):
     if db is not None:
         db.close()
 
+@app.errorhandler(404)
+def page_not_found(e):
+    #snip
+    return render_template('404.html'), 404
+
 
 if __name__ == "__main__":
-    modo = sys.argv[1]
-    if modo == 'init':
+    if len(sys.argv) > 1 and sys.argv[1] == 'init':
         db = sqlite3.connect(DATABASE)
         with open('schema.sql', mode='r') as f:
             db.cursor().executescript(f.read())
