@@ -1,24 +1,23 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, logging, request, g
+from flask_mqtt import Mqtt
+from flask_mail import Mail, Message
 from wtforms import Form, StringField, PasswordField, validators
 from passlib.hash import pbkdf2_sha256
 import sqlite3
 from functools import wraps
-from flask_mqtt import Mqtt
 import sys
 
 # Outros scripts
 from email_token import generate_token, confirm_token
 
 
+# Criando e configurando app
 app = Flask(__name__)
+app.config.from_object('config.DebugConfig')
 
-# Configurando MQTT
-app.config['MQTT_BROKER_URL'] = 'localhost'
-app.config['MQTT_BROKER_PORT'] = 1883
-app.config['MQTT_USERNAME'] = 'server'
-app.config['MQTT_PASSWORD'] = '1234'
-app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
+# Inicializando módulos
 mqtt = Mqtt(app)
+mail = Mail(app)
 
 # Configurando bando de dados
 DATABASE = 'fechadura.db'
@@ -48,7 +47,7 @@ def init_db():
 
 # Index
 @app.route('/')
-def index():
+def home():
     return render_template('home.html')
 
 # Sobre
@@ -88,16 +87,24 @@ def register():
         except Exception as e:
             flash('Erro: ' + str(e), 'danger')
         else:
-            # mensagem
-            # flash('Você está registrado', 'success')
-            flash('O link de confirmção foi enviado para o seu e-mail', 'success')
+            # gera o corpo do email
             token = generate_token(email)
             confirm_url = url_for('confirm_email', token=token, _external=True)
             html = render_template('activate.html', confirm_url=confirm_url)
             subject = "HackerSpace.IFUSP: confirmação de e-mail"
+            
+            # envia email
+            msg = Message(
+                subject,
+                html=html,
+                recipients=[email],
+                sender=app.config['MAIL_DEFAULT_SENDER']
+                )
+            mail.send(msg)
 
-            # return redirect(url_for('home'))
-            return html
+            flash('E-mail de verificação enviado, verifique sua caixa de entrada', 'success')
+            return redirect(url_for('home'))
+            # return html
 
         # fechando conexão
         cur.close()
@@ -177,6 +184,7 @@ def is_logged_in(f):
             return redirect(url_for('login'))
     return wrap
 
+
 # Logout
 @app.route('/logout')
 def logout():
@@ -184,11 +192,13 @@ def logout():
     flash('Você está desconectado', 'success')
     return redirect(url_for('login'))
 
+
 # User dashboard
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
     return render_template('dashboard.html')
+
 
 # Abrir fechadura
 @app.route('/open_door')
@@ -206,7 +216,7 @@ def open_door():
         flash('Porta liberada, seja livre!', 'success')
 
         # publica pedido de abertura da porta
-        mqtt.publish('fechadura', 'liberar')
+        mqtt.publish(app.config['MQTT_TOPIC_OUT'], 'liberar')
 
         return redirect(url_for('dashboard'))
 
@@ -214,7 +224,7 @@ def open_door():
 # Controle do MQTT
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
-    mqtt.subscribe('server')
+    mqtt.subscribe(app.config['MQTT_TOPIC_IN'])
 
 @mqtt.on_message()
 def handle_message(client, userdata, message):
@@ -239,6 +249,7 @@ def close_connection(exception):
     if db is not None:
         db.close()
 
+
 @app.errorhandler(404)
 def page_not_found(e):
     #snip
@@ -254,5 +265,4 @@ if __name__ == "__main__":
         print('Banco de dados criado')
 
     else:
-        app.secret_key = 'eitalasqueiravixenoistudo'
-        app.run(debug=True)
+        app.run()
