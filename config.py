@@ -1,39 +1,30 @@
 import os
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 class BaseConfig(object):
-    """Base configuration."""
-
-    # main config
-    SECRET_KEY = 'my_precious'
-    SECURITY_PASSWORD_SALT = 'my_precious_two'
-    DEBUG = False
-    BCRYPT_LOG_ROUNDS = 13
-    WTF_CSRF_ENABLED = True
-    DEBUG_TB_ENABLED = False
-    DEBUG_TB_INTERCEPT_REDIRECTS = False
-
-    # mqtt settings
-    MQTT_BROKER_URL = 'broker.mqttdashboard.com'
-    MQTT_BROKER_PORT = 1883
-    # MQTT_USERNAME = 'server'
-    # MQTT_PASSWORD = '1234'
-    MQTT_REFRESH_TIME = 1.0  # refresh time in seconds
-    MQTT_TOPIC_IN = "testtopic/server"
-    MQTT_TOPIC_OUT = "testtopic/fechadura"
-
-    # mail settings
-    MAIL_SERVER = 'smtp.googlemail.com'
-    MAIL_PORT = 465
-    MAIL_USE_TLS = False
-    MAIL_USE_SSL = True
-
-    # gmail authentication
-    MAIL_USERNAME = os.environ['APP_MAIL_USERNAME']
-    MAIL_PASSWORD = os.environ['APP_MAIL_PASSWORD']
-
-    # mail accounts
-    MAIL_DEFAULT_SENDER = 'from@example.com'
-
-class DebugConfig(BaseConfig):
+    # Básico
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
     DEBUG = True
-    
+
+    # Banco de dados
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+        'sqlite:///' + os.path.join(basedir, 'app.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # E-mail
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or "localhost"
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 8025)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    ADMINS = ['badarots@gmail.com']
+
+    # MQTT
+    MQTT_BROKER_URL =  os.environ.get('MQTT_BROKER_URL') or 'broker.hivemq.com'  # use the free broker from HIVEMQ
+    MQTT_BROKER_PORT = 1883  # default port for non-tls connection
+    MQTT_USERNAME = ''  # set the username here if you need on for the broker
+    MQTT_PASSWORD = ''  # set the password here if the broker demands on
+    MQTT_KEEPALIVE = 5  # set the time interval for sending a ping to the seconds
+    MQTT_TLS_ENABLED = False  # set TLS to disabled for testing purposes
+    MQTT_IN_TOPIC = "testeio/server"
+    MQTT_OUT_TOPIC = "testeio/porta"

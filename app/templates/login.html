@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block body %}
+    <h1>Sign In</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.username.label }}<br>
+            {{ form.username(size=32) }}<br>
+            {% for error in form.username.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.password.label }}<br>
+            {{ form.password(size=32) }}<br>
+            {% for error in form.password.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+        <p>{{ form.submit(class_="btn btn-primary") }}</p>
+    </form>
+
+    <p>Novo usuário?
+        <a href="{{ url_for('register') }}">Clique para se cadastrar</a>
+    </p>
+    <p>Esqueceu a senha?
+        <a href="{{ url_for('reset_password_request') }}">Clique aqui para resetá-la</a>
+    </p>
+{% endblock %}

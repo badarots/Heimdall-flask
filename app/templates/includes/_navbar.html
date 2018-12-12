@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand navbar-dark bg-dark">
+<nav class="navbar navbar-expand-md navbar-dark bg-dark">
   <a class="navbar-brand" href="#">Fechadura</a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample02" aria-controls="navbarsExample02" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -14,19 +14,19 @@
       </li>
     </ul>
     <ul class="navbar-nav navbar-right">
-        {% if session.logged_in %}
-        <li class="nav-item">
-            <a class="nav-link" href="/dashboard">Usuário</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="/logout">Logout</a>
-        </li>
-        {%else %}
+        {% if current_user.is_anonymous %}
         <li class="nav-item">
             <a class="nav-link" href="/login">Login</a>
         </li>
         <li class="nav-item">
             <a class="nav-link" href="/register">Cadastro</a>
+        </li>
+        {% else %}
+        <li class="nav-item">
+            <a class="nav-link" href="/dashboard">Usuário</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/logout">Logout</a>
         </li>
         {% endif %}
     </ul>
