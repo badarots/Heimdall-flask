@@ -61,3 +61,29 @@ Outra coisa que já foi implementada é a alteração de uma senha esquecida. Fu
 O serviço é uma adaptação desse tutorial: [The Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
 
 Pra entender o que está contecendo o melhor é ler o que está lá. Principalmente os capítulos 1 ao 5, 6 e 10.
+
+## Autenticação das mensagems (em construção)
+
+As mensgagens envidas por MQTT serão autenticadas para garantir sua oringem.
+
+### Vai funcionar assim
+
+Vamos enviar uma mensagem ``m``. A mensagem será enviada sem encriptação acompanhada de uma assinatura ``s``, separados pelo caractere ``$``, para validá-la. Essa assinatura será uma hash gerada pela mensagem e uma chave ``k`` secreta, conhecida pelo servidor e pelo cliente. Assim o pacote terá esse formato:
+
+    payload = m + '$' + s(m,k)
+
+Assim que recebemos o pacote testamos se ele está firmeza gerando a assinatura ``s(m,k)`` e comparando com o a que foi enviada.
+
+### Gerando a assinatura ``s(m, k)``
+
+A assinatura será gerando usando HMAC com sha256: [Python](https://docs.python.org/3.7/library/hmac.html#module-hmac) [Arduino](http://rweather.github.io/arduinolibs/crypto.html)
+
+Decodificanda usando base64: [Python](https://docs.python.org/3.7/library/base64.html) [Arduino](https://github.com/Densaugeo/base64_arduino)
+
+### Exemplo
+
+O pacote completo terá essa forma:
+
+    liberar:1544721462$nWvF9/DLIo8l3OMcKqUvY9EUTP+71TIMzIlxS2lnsJE=
+
+A mensagem é tudo antes do ``$``: ``liberar:1544721462``. Possui o comando ``liberar`` e um timestamp indicando quando foi gerada, separados por um ``:``. O restante é a assinatura decodificada em base64.

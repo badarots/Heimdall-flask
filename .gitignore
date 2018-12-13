@@ -1,5 +1,21 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
+
+# vscode
 .vscode
+
+# Pipenv
 Pipfile.lock
+
+# Banco de dados
 *.db
 migrations/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# scripts de teste
+test*

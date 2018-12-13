@@ -28,3 +28,4 @@ class BaseConfig(object):
     MQTT_TLS_ENABLED = False  # set TLS to disabled for testing purposes
     MQTT_IN_TOPIC = "testeio/server"
     MQTT_OUT_TOPIC = "testeio/porta"
+    MQTT_KEY = "you-will-never-guess-again"
