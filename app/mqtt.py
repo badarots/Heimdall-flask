@@ -2,8 +2,8 @@ from app import app, mqtt
 from time import time
 
 # bibliotecas para altenticação das mensagem
-from hashlib import sha256
-import hmac
+from hashlib import blake2s
+from hmac import compare_digest
 from base64 import b64encode, b64decode
 
 
@@ -28,22 +28,21 @@ def open_door_request():
 
 
 # Gera assinatura
-def sign(msg, digest=sha256, encode=True):
-    sign = hmac.digest(app.config['MQTT_KEY'].encode(), msg.encode(), sha256)
-    if encode:
-        sign = b64encode(sign)
-    return sign
+def sign(msg, b64=False):
+    s = blake2s(msg.encode(), key=app.config['MQTT_KEY'].encode(), digest_size=16).digest()
+    if b64:
+        s = b64encode(s)
+    return s
 
 
 # Gera payload, concatenando a mensagem e a assinatura em um string em base64
-def form_payload(msg, digest=sha256):
-    s = sign(app.config['MQTT_KEY'], msg)
-    return msg + '$' + s.decode()
+def form_payload(msg):
+    return msg + '$' + sign(msg, b64=True).decode()
 
 
 # Checa se o payload é válido
-def check_payload(payload, digest=sha256):
-    msg, s = payload.split('$')
-    s = b64decode(s)
-    check = sign(app.config['MQTT_KEY'], msg, encode=False)
-    return hmac.compare_digest(s, check)
+def check_payload(payload):
+    msg, test = payload.split('$')
+    test = b64decode(test)
+    valid = sign(app.config['MQTT_KEY'], msg)
+    return compare_digest(test, valid)

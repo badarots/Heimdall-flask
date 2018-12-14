@@ -76,7 +76,7 @@ Assim que recebemos o pacote testamos se ele está firmeza gerando a assinatura 
 
 ### Gerando a assinatura ``s(m, k)``
 
-A assinatura será gerando usando HMAC com sha256: [Python](https://docs.python.org/3.7/library/hmac.html#module-hmac) [Arduino](http://rweather.github.io/arduinolibs/crypto.html)
+A assinatura será geranda usando BLAKE2s, com chave, de 16 bytes: [Python](https://docs.python.org/3.7/library/hashlib.html#blake2) [Arduino](http://rweather.github.io/arduinolibs/crypto.html)
 
 Decodificanda usando base64: [Python](https://docs.python.org/3.7/library/base64.html) [Arduino](https://github.com/Densaugeo/base64_arduino)
 
