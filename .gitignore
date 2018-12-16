@@ -19,3 +19,4 @@ migrations/
 
 # scripts de teste
 test*
+*.out
