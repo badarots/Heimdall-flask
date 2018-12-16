@@ -59,8 +59,9 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('Show, você está cadastrado!', 'success')
-        return redirect(url_for('login'))
+        login_user(user)
+        flash('Você está cadastrado! Agora ative sua conta clicando no link que enviamos para o seu e-mail', 'success')
+        return redirect(url_for('send_activation'))
     return render_template('register.html', form=form)
 
 

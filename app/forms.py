@@ -12,12 +12,12 @@ class LoginForm(FlaskForm):
 
 
 class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
+    username = StringField('Usuário', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
+    password = PasswordField('Senha', validators=[DataRequired()])
     confirm = PasswordField(
-        'Repeat Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Register')
+        'Comfirme sua senha', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Enviar')
 
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
@@ -32,11 +32,11 @@ class RegistrationForm(FlaskForm):
 
 class ResetPasswordRequestForm(FlaskForm):
     email = StringField('E-mail', validators=[DataRequired(), Email()])
-    submit = SubmitField('Resete a senha')
+    submit = SubmitField('Enviar')
 
 
 class ResetPasswordForm(FlaskForm):
     password = PasswordField('Senha', validators=[DataRequired()])
     password2 = PasswordField(
         'Repita a senha', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Troque a senha')
+    submit = SubmitField('Enviar')

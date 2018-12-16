@@ -17,7 +17,7 @@ class BaseConfig(object):
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    ADMINS = ['badarots@gmail.com']
+    ADMINS = ['admin@example.com']
 
     # MQTT
     MQTT_BROKER_URL =  os.environ.get('MQTT_BROKER_URL') or 'broker.hivemq.com'  # use the free broker from HIVEMQ
@@ -26,6 +26,6 @@ class BaseConfig(object):
     MQTT_PASSWORD = ''  # set the password here if the broker demands on
     MQTT_KEEPALIVE = 5  # set the time interval for sending a ping to the seconds
     MQTT_TLS_ENABLED = False  # set TLS to disabled for testing purposes
-    MQTT_IN_TOPIC = "testeio/server"
-    MQTT_OUT_TOPIC = "testeio/porta"
+    MQTT_IN_TOPIC = "testarhs/server"
+    MQTT_OUT_TOPIC = "testarhs/porta"
     MQTT_KEY = "you-will-never-guess-again"

@@ -22,10 +22,10 @@
         <p>{{ form.submit(class_="btn btn-primary") }}</p>
     </form>
 
-    <p>Novo usuário?
-        <a href="{{ url_for('register') }}">Clique para se cadastrar</a>
+    <p>
+        <a href="{{ url_for('register') }}">Novo usuário?</a>
     </p>
-    <p>Esqueceu a senha?
-        <a href="{{ url_for('reset_password_request') }}">Clique aqui para resetá-la</a>
+    <p>
+        <a href="{{ url_for('reset_password_request') }}">Esqueceu a senha?</a>
     </p>
 {% endblock %}
